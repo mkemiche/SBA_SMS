@@ -1,6 +1,7 @@
 package jpa.dao;
 
 import jpa.entitymodels.Course;
+import jpa.exceptions.CourseNotFoundException;
 
 import java.util.List;
 
@@ -11,7 +12,6 @@ import java.util.List;
 public interface CourseDao {
 
     List<Course> getAllCourses();
-
     List<Course> getCourseById(int number);
 
 }

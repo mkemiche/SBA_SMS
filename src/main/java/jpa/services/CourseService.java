@@ -2,6 +2,7 @@ package jpa.services;
 
 import jpa.dao.CourseDao;
 import jpa.entitymodels.Course;
+import jpa.exceptions.CourseNotFoundException;
 import jpa.utils.ConfigEM;
 import lombok.extern.java.Log;
 

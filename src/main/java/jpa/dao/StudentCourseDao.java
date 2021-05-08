@@ -13,4 +13,5 @@ public interface StudentCourseDao {
 
     List<Course> getAllStudentCourses(String email);
     void registerCourse(StudentCourses studentCourses);
+    void removeRegistredCourse(int id);
 }

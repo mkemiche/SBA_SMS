@@ -5,6 +5,8 @@ import lombok.*;
 
 import javax.persistence.*;
 
+import java.util.Objects;
+
 import static java.lang.System.out;
 
 /**
@@ -38,5 +40,18 @@ public class Course {
     @Override
     public String toString() {
         return String.format("%-10s%-20S%-15s", getCId(), getCName(), getCInstructorName());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Course)) return false;
+        Course course = (Course) o;
+        return cId == course.cId && cName.equals(course.cName) && cInstructorName.equals(course.cInstructorName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(cId, cName, cInstructorName);
     }
 }

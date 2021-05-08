@@ -4,6 +4,9 @@ import jpa.dao.StudentDao;
 import jpa.entitymodels.Course;
 import jpa.entitymodels.Student;
 import jpa.entitymodels.StudentCourses;
+import jpa.exceptions.CourseAlreadyRegistredException;
+import jpa.exceptions.StudentNotFoundException;
+import jpa.exceptions.UserValidationFailedException;
 import jpa.utils.ConfigEM;
 import lombok.extern.java.Log;
 
@@ -55,31 +58,30 @@ public class StudentService implements StudentDao {
         return students;
     }
 
-    @Override
-    public boolean validateStudent(String email, String password) {
-        Student s = getStudentByEmail(email).get(0);
-        if(s == null ){
-            return false;
+
+    private boolean validateStudent(String email, String password) throws StudentNotFoundException {
+        List<Student> students = getStudentByEmail(email);
+        if(students.isEmpty()){
+            throw new StudentNotFoundException("Student does not exist with entered email : "+ email);
         }
-        return s.getSPass().equals(password);
+        return students.get(0).getSPass().equals(password);
     }
 
     @Override
-    public void registerStudentToCourse(String email, Course course) {
+    public void registerStudentToCourse(Student student, Course course) throws StudentNotFoundException, UserValidationFailedException, CourseAlreadyRegistredException {
         StudentCourses st = new StudentCourses();
-        Student student = getStudentByEmail(email).get(0);
 
-        if(!validateStudent(email, student.getSPass())){
-            return;
+        if(!validateStudent(student.getSEmail(), student.getSPass())){
+            throw new UserValidationFailedException("User Validation failed.");
         }
 
-        List<Course> courses = getStudentCourses(email);
+        List<Course> courses = getStudentCourses(student.getSEmail());
         boolean check = courses.stream().anyMatch(c-> c.getCId() == course.getCId());
         if(check){
             System.out.println("You're already registred in this course.");
-            return;
+            throw new CourseAlreadyRegistredException("You're already registred in this course with id : "+course.getCId());
         }
-        st.seteMail(email);
+        st.seteMail(student.getSEmail());
         st.setCourseID(course.getCId());
         sts.registerCourse(st);
     }

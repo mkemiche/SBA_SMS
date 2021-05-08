@@ -12,6 +12,10 @@ import java.util.Scanner;
 
 import jpa.entitymodels.Course;
 import jpa.entitymodels.Student;
+import jpa.exceptions.CourseAlreadyRegistredException;
+import jpa.exceptions.CourseNotFoundException;
+import jpa.exceptions.StudentNotFoundException;
+import jpa.exceptions.UserValidationFailedException;
 import jpa.services.CourseService;
 import jpa.services.StudentCourseService;
 import jpa.services.StudentService;
@@ -43,10 +47,15 @@ public class SMSRunner {
 	public static void main(String[] args) {
 
 		SMSRunner sms = new SMSRunner();
-		sms.run();
+		try{
+			sms.run();
+		}catch (UserValidationFailedException | StudentNotFoundException | CourseNotFoundException | CourseAlreadyRegistredException ex){
+			out.println(ex.getMessage()+" - "+ex.getStackTrace()[0].getMethodName());
+		}
+
 	}
 
-	private void run() {
+	private void run() throws UserValidationFailedException, StudentNotFoundException, CourseNotFoundException, CourseAlreadyRegistredException {
 		// Login or quit
 		switch (menu1()) {
 		case 1:
@@ -71,7 +80,7 @@ public class SMSRunner {
 		return sin.nextInt();
 	}
 
-	private boolean studentLogin() {
+	private boolean studentLogin() throws StudentNotFoundException, UserValidationFailedException {
 		boolean retValue = false;
 		out.print("Enter your email address: ");
 		String email = sin.next();
@@ -81,6 +90,9 @@ public class SMSRunner {
 		List<Student> students = studentService.getStudentByEmail(email);
 		if (!students.isEmpty()) {
 			currentStudent = students.get(0);
+		}else{
+			out.println("Student not found. GoodBye!");
+			throw new StudentNotFoundException("Student does not exist with entered email : "+ email);
 		}
 
 		if (currentStudent != null && currentStudent.getSPass().equals(password)) {
@@ -93,11 +105,12 @@ public class SMSRunner {
 			retValue = true;
 		} else {
 			out.println("User Validation failed. GoodBye!");
+			throw new UserValidationFailedException("User Validation failed.");
 		}
 		return retValue;
 	}
 
-	private void registerMenu() {
+	private void registerMenu() throws CourseNotFoundException, StudentNotFoundException, UserValidationFailedException, CourseAlreadyRegistredException {
 		sb.append("\n1.Register a class\n2. Logout\nPlease Enter Selection: ");
 		out.print(sb.toString());
 		sb.delete(0, sb.length());
@@ -117,7 +130,7 @@ public class SMSRunner {
 			List<Course> newCourse = courseService.getCourseById(number);
 
 			if (!newCourse.isEmpty()) {
-				studentService.registerStudentToCourse(currentStudent.getSEmail(), newCourse.get(0));
+				studentService.registerStudentToCourse(currentStudent, newCourse.get(0));
 				Student temp = studentService.getStudentByEmail(currentStudent.getSEmail()).get(0);
 				
 				StudentCourseService scService = new StudentCourseService();
@@ -132,6 +145,7 @@ public class SMSRunner {
 				}
 			} else {
 				out.println("Course not found. GoodBye!");
+				throw new CourseNotFoundException("Selected course does not exist.");
 			}
 			break;
 		case 2:

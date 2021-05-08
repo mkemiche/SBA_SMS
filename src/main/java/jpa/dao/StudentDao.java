@@ -2,6 +2,9 @@ package jpa.dao;
 
 import jpa.entitymodels.Course;
 import jpa.entitymodels.Student;
+import jpa.exceptions.CourseAlreadyRegistredException;
+import jpa.exceptions.StudentNotFoundException;
+import jpa.exceptions.UserValidationFailedException;
 
 import java.util.List;
 
@@ -13,7 +16,6 @@ public interface StudentDao {
 
     List<Student> getAllStudents();
     List<Student> getStudentByEmail(String email);
-    boolean validateStudent(String email, String password);
-    void registerStudentToCourse(String email, Course course);
+    void registerStudentToCourse(Student student, Course course) throws StudentNotFoundException, UserValidationFailedException, CourseAlreadyRegistredException;
     List<Course> getStudentCourses(String email);
 }
