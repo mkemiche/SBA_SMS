@@ -5,11 +5,6 @@
  */
 package jpa.mainrunner;
 
-import static java.lang.System.out;
-
-import java.util.List;
-import java.util.Scanner;
-
 import jpa.entitymodels.Course;
 import jpa.entitymodels.Student;
 import jpa.exceptions.CourseAlreadyRegistredException;
@@ -19,6 +14,12 @@ import jpa.exceptions.UserValidationFailedException;
 import jpa.services.CourseService;
 import jpa.services.StudentCourseService;
 import jpa.services.StudentService;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Scanner;
+
+import static java.lang.System.out;
 
 /**1
  * 
@@ -32,7 +33,7 @@ public class SMSRunner {
 
 	private CourseService courseService;
 	private StudentService studentService;
-	private Student currentStudent;
+	private Optional<Student> currentStudent;
 
 	public SMSRunner() {
 		sin = new Scanner(System.in);
@@ -55,6 +56,14 @@ public class SMSRunner {
 
 	}
 
+	/**
+	 * @description which allows the user to enter his/her email and password and check whether or not those credentials are valid, in order to log in.
+	 * 				After a validation credential, this methdo allow user to displays and prompt the student to select one of the following two additional numeric (1 or 2)
+	 * @throws UserValidationFailedException
+	 * @throws StudentNotFoundException
+	 * @throws CourseNotFoundException
+	 * @throws CourseAlreadyRegistredException
+	 */
 	private void run() throws UserValidationFailedException, StudentNotFoundException, CourseNotFoundException, CourseAlreadyRegistredException {
 		// Login or quit
 		switch (menu1()) {
@@ -80,6 +89,13 @@ public class SMSRunner {
 		return sin.nextInt();
 	}
 
+	/**
+	 * @description this method check credential user. If the credentials are invalid the program should end with appropriate message to the student.
+	 *				If the credentials are valid, the student is logged in and all the classes the Student is registered to should be displayed.
+	 * @return
+	 * @throws StudentNotFoundException
+	 * @throws UserValidationFailedException
+	 */
 	private boolean studentLogin() throws StudentNotFoundException, UserValidationFailedException {
 		boolean retValue = false;
 		out.print("Enter your email address: ");
@@ -87,21 +103,17 @@ public class SMSRunner {
 		out.print("Enter your password: ");
 		String password = sin.next();
 
-		List<Student> students = studentService.getStudentByEmail(email);
-		if (!students.isEmpty()) {
-			currentStudent = students.get(0);
-		}else{
+		currentStudent = studentService.findStudentBy(email).stream().findFirst();
+		if(currentStudent.isEmpty()) {
 			out.println("Student not found. GoodBye!");
 			throw new StudentNotFoundException("Student does not exist with entered email : "+ email);
 		}
 
-		if (currentStudent != null && currentStudent.getSPass().equals(password)) {
-			List<Course> courses = studentService.getStudentCourses(email);
+		if (currentStudent.get().getSPass().equals(password)) {
+			List<Course> courses = studentService.findCourseBy(email);
 			out.println("MyClasses");
 			out.printf("%-10s%-20S%-15s\n", "#", "COURSE NAME", "INSTRUCTOR NAME");
-			for (Course course : courses) {
-				out.println(course);
-			}
+			courses.forEach(out::println);
 			retValue = true;
 		} else {
 			out.println("User Validation failed. GoodBye!");
@@ -110,6 +122,16 @@ public class SMSRunner {
 		return retValue;
 	}
 
+	/**
+	 * @description Register to Class: Which displays all the courses in the database and allows the student to select a course in which the student wished to be registered to.
+	 * 				If the Student is already registered in that course, display the message "You are already registered in that course!",
+	 * 				otherwise, register the student to that course and save this result in your database. Also show the updated registered courses list for that student.
+	 * 				After that end the program with appropriate message.
+	 * @throws CourseNotFoundException
+	 * @throws StudentNotFoundException
+	 * @throws UserValidationFailedException
+	 * @throws CourseAlreadyRegistredException
+	 */
 	private void registerMenu() throws CourseNotFoundException, StudentNotFoundException, UserValidationFailedException, CourseAlreadyRegistredException {
 		sb.append("\n1.Register a class\n2. Logout\nPlease Enter Selection: ");
 		out.print(sb.toString());
@@ -117,32 +139,27 @@ public class SMSRunner {
 
 		switch (sin.nextInt()) {
 		case 1:
-			List<Course> allCourses = courseService.getAllCourses();
-			List<Course> studentCourses = studentService.getStudentCourses(currentStudent.getSEmail());
+			List<Course> allCourses = courseService.getAllRecords(null);
+			List<Course> studentCourses = studentService.findCourseBy(currentStudent.get().getSEmail());
 			allCourses.removeAll(studentCourses);
 			out.printf("%-10s%-20S%-15s\n", "ID", "COURSE NAME", "INSTRUCTOR NAME");
-			for (Course course : allCourses) {
-				out.println(course);
-			}
+			allCourses.forEach(out::println);
 			out.println();
 			out.print("Enter Course Number: ");
 			int number = sin.nextInt();
-			List<Course> newCourse = courseService.getCourseById(number);
+			List<Course> newCourse = courseService.findCourseBy(number);
 
 			if (!newCourse.isEmpty()) {
-				studentService.registerStudentToCourse(currentStudent, newCourse.get(0));
-				Student temp = studentService.getStudentByEmail(currentStudent.getSEmail()).get(0);
+				studentService.register(currentStudent.get(), newCourse.get(0));
+				Student temp = studentService.findStudentBy(currentStudent.get().getSEmail()).get(0);
 				
 				StudentCourseService scService = new StudentCourseService();
-				List<Course> sCourses = scService.getAllStudentCourses(temp.getSEmail());
+				List<Course> sCourses = scService.getAllRecords(temp.getSEmail());
 				
 
 				out.println("MyClasses :");
 				out.printf("%-10s%-20S%-15s\n", "COURSE ID", "COURSE NAME", "INSTRUCTOR NAME");
-				for (Course course : sCourses) {
-					out.println(course);
-
-				}
+				sCourses.forEach(out::println);
 			} else {
 				out.println("Course not found. GoodBye!");
 				throw new CourseNotFoundException("Selected course does not exist.");
