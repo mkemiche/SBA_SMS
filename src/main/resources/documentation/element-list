@@ -1,0 +1,7 @@
+jpa.dao
+jpa.entitymodels
+jpa.exceptions
+jpa.interfaces
+jpa.mainrunner
+jpa.services
+jpa.utils

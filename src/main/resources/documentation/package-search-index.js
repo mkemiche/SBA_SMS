@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"jpa.dao"},{"l":"jpa.entitymodels"},{"l":"jpa.exceptions"},{"l":"jpa.interfaces"},{"l":"jpa.mainrunner"},{"l":"jpa.services"},{"l":"jpa.utils"}]
