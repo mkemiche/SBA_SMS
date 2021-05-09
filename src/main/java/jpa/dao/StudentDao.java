@@ -14,7 +14,6 @@ import java.util.List;
  */
 public interface StudentDao {
 
-    List<Student> getAllStudents();
     List<Student> getStudentByEmail(String email);
     void registerStudentToCourse(Student student, Course course) throws StudentNotFoundException, UserValidationFailedException, CourseAlreadyRegistredException;
     List<Course> getStudentCourses(String email);

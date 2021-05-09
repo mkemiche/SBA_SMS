@@ -8,11 +8,11 @@ import jpa.exceptions.StudentNotFoundException;
 import jpa.exceptions.UserValidationFailedException;
 import org.junit.jupiter.api.Test;
 
-import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author mkemiche
@@ -25,7 +25,7 @@ class StudentServiceTest {
     StudentCourseService scs = new StudentCourseService();
     @Test
     void getAllStudents() {
-        List<Student> studentList = ss.getAllStudents();
+        List<Student> studentList = ss.getAllRecords(null);
         Student student = new Student("aiannitti7@is.gd","Alexandra Iannitti", "TWP4hf5j", new ArrayList<>());
         assertEquals(10, studentList.size());
         assertEquals(student, studentList.get(0));
@@ -34,7 +34,7 @@ class StudentServiceTest {
     @Test
     void getStudentByEmail() {
         Student actualStudent = new Student("aiannitti7@is.gd","Alexandra Iannitti", "TWP4hf5j", new ArrayList<>());
-        Student expectedStudent = ss.getStudentByEmail(actualStudent.getSEmail()).get(0);
+        Student expectedStudent = ss.findStudentBy(actualStudent.getSEmail()).get(0);
         assertEquals(actualStudent.getSName(), expectedStudent.getSName());
         assertEquals(actualStudent.getSPass(), expectedStudent.getSPass());
     }
@@ -45,22 +45,22 @@ class StudentServiceTest {
         Course course = new Course(7,"Object Oriented Programming","Giselle Ardy");
 
         //remove existing course
-        scs.removeRegistredCourse(course.getCId());
+        scs.remove(course.getCId());
 
         //register course
         //test existing course in database
-        ss.registerStudentToCourse(student, course);
-        var registredCourse = scs.getAllStudentCourses(student.getSEmail()).stream().filter(c->c.getCId() == course.getCId()).findFirst().orElse(null);
+        ss.register(student, course);
+        var registredCourse = scs.getAllRecords(student.getSEmail()).stream().filter(c->c.getCId() == course.getCId()).findFirst().orElse(null);
         assertEquals(course, registredCourse);
 
         //Student can't registre the same course twice
         //try to register the same existing course
         //thorw exception CourseAlreadyRegistredException.
-        assertThrows(CourseAlreadyRegistredException.class, ()-> ss.registerStudentToCourse(student, course));
+        assertThrows(CourseAlreadyRegistredException.class, ()-> ss.register(student, course));
 
         //student must have email and password valid
         String wrongPassword = "1234";
         student.setSPass(wrongPassword);
-        assertThrows(UserValidationFailedException.class, ()-> ss.registerStudentToCourse(student, course));
+        assertThrows(UserValidationFailedException.class, ()-> ss.register(student, course));
     }
 }

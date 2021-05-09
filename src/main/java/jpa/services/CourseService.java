@@ -1,8 +1,9 @@
 package jpa.services;
 
-import jpa.dao.CourseDao;
+import com.sun.istack.Nullable;
 import jpa.entitymodels.Course;
-import jpa.exceptions.CourseNotFoundException;
+import jpa.interfaces.FindAllRecords;
+import jpa.interfaces.FindCourseBy;
 import jpa.utils.ConfigEM;
 import lombok.extern.java.Log;
 
@@ -11,20 +12,32 @@ import javax.persistence.RollbackException;
 import java.util.List;
 
 /**
+ * The type Course service.
+ *
  * @author mkemiche
- * @created 05/05/2021
+ * @created 05 /05/2021
  */
 @Log
-public class CourseService implements CourseDao {
+public class CourseService implements FindCourseBy<Course, Integer>, FindAllRecords<Course, String> {
 
+    /**
+     * The Em.
+     */
     EntityManager em = null;
-    @Override
-    public List<Course> getAllCourses() {
 
+
+    /**
+     *
+     * @description This method takes a Course’s id as an Integer and parses the Course list for a Course with that id
+     * @param id
+     * @return a Course Object.
+     */
+    @Override
+    public List<Course> findCourseBy(Integer id) {
         List<Course> courses = null;
         try{
             em = ConfigEM.createEntityManager();
-            courses = em.createQuery("select c from Course c").getResultList();
+            courses = em.createNamedQuery("getCourseById").setParameter("id", id).getResultList();
             em.getTransaction().commit();
         }catch (IllegalArgumentException | RollbackException ex){
             em.getTransaction().rollback();
@@ -36,12 +49,19 @@ public class CourseService implements CourseDao {
         return courses;
     }
 
+    /**
+     *
+     * @description This method takes no parameter and returns every Course in the table.
+     * @param @Nullable String value
+     * @return the data as a List<Course>
+     */
     @Override
-    public List<Course> getCourseById(int number) {
+    public List<Course> getAllRecords(@Nullable String s) {
+
         List<Course> courses = null;
         try{
             em = ConfigEM.createEntityManager();
-            courses = em.createNamedQuery("getCourseById").setParameter("id", number).getResultList();
+            courses = em.createQuery("select c from Course c").getResultList();
             em.getTransaction().commit();
         }catch (IllegalArgumentException | RollbackException ex){
             em.getTransaction().rollback();

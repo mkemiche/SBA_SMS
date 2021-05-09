@@ -17,7 +17,7 @@ class CourseServiceTest {
 
     @Test
     void getAllCourses() {
-        List<Course> courseList = cs.getAllCourses();
+        List<Course> courseList = cs.getAllRecords(null);
         Course course = new Course(5,"Physics", "Dani Swallow");
         assertEquals(10, courseList.size());
         assertEquals(course, courseList.get(4));
@@ -26,7 +26,7 @@ class CourseServiceTest {
     @Test
     void getCourseById() {
         Course actualCourse = new Course(8,"Data Structures", "Carolan Stoller");
-        Course ExpectedCourse = cs.getCourseById(actualCourse.getCId()).get(0);
+        Course ExpectedCourse = cs.findCourseBy(actualCourse.getCId()).get(0);
         assertEquals(actualCourse.getCName(), ExpectedCourse.getCName());
         assertEquals(actualCourse.getCInstructorName(), ExpectedCourse.getCInstructorName());
     }
